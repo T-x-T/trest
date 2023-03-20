@@ -1,0 +1,39 @@
+{
+	"configs": [
+		{
+			"name": "backend",
+			"description": "tests for the rest api of the backend",
+			"setup": {
+				"cmd": "curl -O https://raw.githubusercontent.com/T-x-T/TxTs-Treasury/4b0cb752581eb58f20900bdaccb0caf3f0f6ddf5/docker-compose.yml && docker-compose up -d && sleep 5"
+			},
+			"cleanup": {
+				"cmd": "docker-compose down && rm docker-compose.yml"
+			},
+			"api_hostname": "http://localhost:4000"
+		}
+	],
+	"tasks": {
+		"login_as_admin": {
+			"endpoint": "/api/v1/login",
+			"method": "POST",
+			"payload": {
+				"name": "admin",
+				"secret": "changeme"
+			}
+		}
+	},
+	"tests": [
+		{
+			"name": "get_all_currencies",
+			"description": "retrieval of all currencies works",
+			"endpoint": "/api/v1/currencies/all",
+			"method": "GET",
+			"cookies": {
+				"accessToken": "$login_as_admin.accessToken"
+			},
+			"before": [
+				"login_as_admin"
+			]
+		}
+	]
+}
