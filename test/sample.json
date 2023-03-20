@@ -33,7 +33,21 @@
 			},
 			"before": [
 				"login_as_admin"
-			]
+			],
+			"expected_outcome": [{"id":0,"name":"Euro","minor_in_mayor":100,"symbol":"€"},{"id":1,"name":"USD","minor_in_mayor":100,"symbol":"$"}]
+		},
+		{
+			"name": "get_all_recipients",
+			"description": "retrieval of all recipients works",
+			"endpoint": "/api/v1/recipients/all",
+			"method": "GET",
+			"cookies": {
+				"accessToken": "$login_as_admin.accessToken"
+			},
+			"before": [
+				"login_as_admin"
+			],
+			"expected_outcome": [{"id":0,"name":"Default","user_id":null,"tag_ids":[]}]
 		}
 	]
 }
