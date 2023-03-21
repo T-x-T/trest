@@ -28,19 +28,27 @@ fn get_config_file() -> String {
 
 fn run_config(config: &JsonValue, config_file: &JsonValue) {
   println!("Running config {}: {}", config["name"], config["description"]);
-  run_setup(config);
+  
+  let mut test_outcomes: Vec<TestOutcomes> = Vec::new();
 
-  let test_outcomes: Vec<TestOutcomes> = config_file["tests"]
-    .members()
-    .map(|x| run_test(x, config, config_file))
-    .collect();
+  for test_chain in config_file["tests"].members() {
+    println!("\n--------------\nrunning test chain {}", test_chain["name"]);
+    run_setup(config);
+  
+    let mut test_chain_outcomes: Vec<TestOutcomes> = test_chain["tests"]
+      .members()
+      .map(|x| run_test(x, config, config_file))
+      .collect();
 
-  if config["cleanup"]["cmd"].is_string() {
-    run_cleanup(config);
+    test_outcomes.append(&mut test_chain_outcomes);
+  
+    if config["cleanup"]["cmd"].is_string() {
+      run_cleanup(config);
+    }
   }
 
   println!(
-    "Config {} passed {} test of {}",
+    "\nConfig {} passed {} test of {}",
     config["name"],
     test_outcomes.iter().filter(|x| **x == TestOutcomes::Passed).collect::<Vec<_>>().len(),
     test_outcomes.len()
