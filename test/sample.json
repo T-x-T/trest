@@ -4,7 +4,10 @@
 			"name": "backend",
 			"description": "tests for the rest api of the backend",
 			"setup": {
-				"cmd": "curl -O https://raw.githubusercontent.com/T-x-T/TxTs-Treasury/4b0cb752581eb58f20900bdaccb0caf3f0f6ddf5/docker-compose.yml && docker-compose up -d && sleep 5"
+				"cmd": "curl -O https://raw.githubusercontent.com/T-x-T/TxTs-Treasury/4b0cb752581eb58f20900bdaccb0caf3f0f6ddf5/docker-compose.yml && docker-compose up -d",
+				"finished_condition": {
+					"endpoint_reachable": "/api/v1"
+				}
 			},
 			"cleanup": {
 				"cmd": "docker-compose down && rm docker-compose.yml"

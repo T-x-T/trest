@@ -54,6 +54,18 @@ fn run_setup(config: &JsonValue) {
     .arg(config["setup"]["cmd"].as_str().unwrap())
     .output()
     .unwrap();
+
+  if config["setup"]["finished_condition"]["endpoint_reachable"].is_string() {
+    let mut request_url = String::from(config["api_hostname"].as_str().unwrap());
+    request_url.push_str(config["setup"]["finished_condition"]["endpoint_reachable"].as_str().unwrap());
+    loop {
+      match reqwest::blocking::Client::new().get(&request_url).send() {
+        Ok(_) => break,
+        Err(_) => continue,
+      }
+    }
+  }
+
   println!("setup completed");
 }
 
