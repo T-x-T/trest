@@ -80,16 +80,36 @@ fn run_cleanup(config: &JsonValue) {
 }
 
 fn run_test(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> TestOutcomes {
-  println!("\nrun test {}: {}", test["name"], test["description"]);
+  println!("\nrun test {}", test["name"]);
 
-  let response: String = run_test_http_request(test, config, config_file);
+  let response = run_test_http_request(test, config, config_file);
 
-  println!("response of test: {}", response);
-  println!("expected outcome: {}", json::stringify(test["expected_outcome"].clone()));
+  //println!("response of test: {}", response);
+  //println!("expected outcome: {}", json::stringify(test["expected_outcome"].clone()));
 
-  if response == json::stringify(test["expected_outcome"].clone()) {
+  let mut passed = true;
+
+  let response_status_code = response.status().as_u16();
+  let response_body = response.text().unwrap();
+
+  if !test["expected_outcome"]["body_equals"].is_empty() {
+    if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
+      println!("reponse body of\n{}\ndidnt match expected outcome\n{}", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone()));
+      passed = false;
+    }
+  }
+
+  if !test["expected_outcome"]["status_code_equals"].is_empty() {
+    if response_status_code != test["expected_outcome"]["status_code_equals"].as_u16().unwrap() {
+      println!("reponse status code of {} didnt match expected outcome {}", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap());
+      println!("response body was {}", response_body);
+      passed = false;
+    }
+  }
+
+  if passed {
     println!("passed");
-    return TestOutcomes::Passed;
+    return TestOutcomes::Passed
   } else {
     println!("failed");
     return TestOutcomes::Failed;
@@ -104,30 +124,42 @@ fn run_test_before_tasks<'a>(test: &'a JsonValue, config: &'a JsonValue, config_
 }
 
 fn run_task<'a>(task: &'a str, config: &'a JsonValue, config_file: &JsonValue) -> (&'a str, String) {
+  let mut body: Option<&JsonValue> = None;
+  if config_file["tasks"][task]["body"].is_object() {
+    body = Some(&config_file["tasks"][task]["body"]);
+  }
+  
   let response = send_http_request(
     config,
     config_file["tasks"][task]["method"].as_str().unwrap(),
     config_file["tasks"][task]["endpoint"].as_str().unwrap(),
+    body,
     None,
     None
   );
 
-  return (task, response);
+  return (task, response.text().unwrap());
 }
 
-fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> String {
+fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> reqwest::blocking::Response {
   let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
+
+  let mut body: Option<&JsonValue> = None;
+  if test["body"].is_object() {
+    body = Some(&test["body"]);
+  }
 
   return send_http_request(
     config,
     test["method"].as_str().unwrap(),
     test["endpoint"].as_str().unwrap(),
+    body,
     Some(&test["cookies"]),
     Some(before_task_results)
   );
 }
 
-fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, cookies: Option<&JsonValue>, before_task_results: Option<HashMap<&str, String>>) -> String {
+fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Option<&JsonValue>, cookies: Option<&JsonValue>, before_task_results: Option<HashMap<&str, String>>) -> reqwest::blocking::Response {
   let mut request_url = String::from(config["api_hostname"].as_str().unwrap());
   request_url.push_str(endpoint);
 
@@ -145,20 +177,23 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, cookies: 
         .header(reqwest::header::COOKIE, cookie_string)
         .send()
         .unwrap()
-        .text()
-        .unwrap()
     },
     "POST" => {
       client
         .post(request_url)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .body(json::stringify(json::object!{
-          name: "admin",
-          secret: "changeme"
-          }))
+        .header(reqwest::header::COOKIE, cookie_string)
+        .body(body.unwrap_or(&json::object!{}).to_string())
         .send()
         .unwrap()
-        .text()
+    },
+    "PUT" => {
+      client
+        .put(request_url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .header(reqwest::header::COOKIE, cookie_string)
+        .body(body.unwrap_or(&json::object!{}).to_string())
+        .send()
         .unwrap()
     },
     _ => panic!("tried to send http request with unrecognized method {}", method)
