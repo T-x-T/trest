@@ -8,9 +8,19 @@ fn main() {
   println!("Config file read");
   println!("There are {} configs to run", config_file["configs"].len());
 
-  config_file["configs"]
-    .members()
-    .for_each(|x| run_config(x, &config_file));
+  let mut did_tests_fail = false;
+
+  for config in config_file["configs"].members() {
+    if !run_config(config, &config_file) {
+      did_tests_fail = true;
+    }
+  }
+
+  if did_tests_fail {
+    process::exit(1);
+  } else {
+    process::exit(0);
+  }
 }
 
 #[derive(PartialEq)]
@@ -26,7 +36,7 @@ fn get_config_file() -> String {
   return fs::read_to_string(args[1].clone()).expect("failed to read config file");
 }
 
-fn run_config(config: &JsonValue, config_file: &JsonValue) {
+fn run_config(config: &JsonValue, config_file: &JsonValue) -> bool {
   println!("Running config {}: {}", config["name"], config["description"]);
   
   let mut test_outcomes: Vec<TestOutcomes> = Vec::new();
@@ -47,12 +57,17 @@ fn run_config(config: &JsonValue, config_file: &JsonValue) {
     }
   }
 
+  let passed_tests = test_outcomes.iter().filter(|x| **x == TestOutcomes::Passed).collect::<Vec<_>>().len();
+  let total_tests = test_outcomes.len();
+
   println!(
     "\nConfig {} passed {} test of {}",
     config["name"],
-    test_outcomes.iter().filter(|x| **x == TestOutcomes::Passed).collect::<Vec<_>>().len(),
-    test_outcomes.len()
+    passed_tests,
+    total_tests
   );
+
+  return passed_tests == total_tests;
 }
 
 fn run_setup(config: &JsonValue) {
