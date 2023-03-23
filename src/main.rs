@@ -11,7 +11,7 @@ fn main() {
   let mut tests_failed = false;
 
   for config in config_file["configs"].members() {
-    if !run_config(config, &config_file) {
+    if run_config(config, &config_file) {
       tests_failed = true;
     }
   }
