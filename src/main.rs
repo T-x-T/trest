@@ -8,15 +8,15 @@ fn main() {
   println!("Config file read");
   println!("There are {} configs to run", config_file["configs"].len());
 
-  let mut did_tests_fail = false;
+  let mut tests_failed = false;
 
   for config in config_file["configs"].members() {
     if !run_config(config, &config_file) {
-      did_tests_fail = true;
+      tests_failed = true;
     }
   }
 
-  if did_tests_fail {
+  if tests_failed {
     process::exit(1);
   } else {
     process::exit(0);
@@ -25,7 +25,8 @@ fn main() {
 
 #[derive(PartialEq)]
 enum TestOutcomes {
-  Passed, Failed
+  Passed, 
+  Failed(String)
 }
 
 fn get_config_file() -> String {
@@ -61,17 +62,28 @@ fn run_config(config: &JsonValue, config_file: &JsonValue) -> bool {
   let total_tests = test_outcomes.len();
 
   println!(
-    "\nConfig {} passed {} test of {}",
+    "\nConfig {} passed {} of {} tests",
     config["name"],
     passed_tests,
     total_tests
   );
 
-  return passed_tests == total_tests;
+  if passed_tests != total_tests {
+    test_outcomes.iter().for_each(|x| {
+      match x {
+        TestOutcomes::Passed => return,
+        TestOutcomes::Failed(x) => println!("{}", x),
+    }
+    });
+    return true;
+  } else {
+    return false;
+  }
+
 }
 
 fn run_setup(config: &JsonValue) {
-  println!("setting up...");
+  print!("setting up... ");
   process::Command::new("sh")
     .arg("-c")
     .arg(config["setup"]["cmd"].as_str().unwrap())
@@ -93,7 +105,7 @@ fn run_setup(config: &JsonValue) {
 }
 
 fn run_cleanup(config: &JsonValue) {
-  println!("cleaning up...");
+  print!("cleaning up... ");
   process::Command::new("sh")
     .arg("-c")
     .arg(config["cleanup"]["cmd"].as_str().unwrap())
@@ -102,8 +114,8 @@ fn run_cleanup(config: &JsonValue) {
   println!("cleanup completed");
 }
 
-fn run_test(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> TestOutcomes {
-  println!("\nrun test {}", test["name"]);
+fn run_test(test: &JsonValue, config: &JsonValue, config_file: &JsonValue) -> TestOutcomes {
+  print!("running test {}: ", test["name"]);
 
   let response = run_test_http_request(test, config, config_file);
 
@@ -115,17 +127,19 @@ fn run_test(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> T
   let response_status_code = response.status().as_u16();
   let response_body = response.text().unwrap();
 
+  let mut failure_message = format!("Test {} failed:\n", test["name"]);
+
   if !test["expected_outcome"]["body_equals"].is_empty() {
     if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
-      println!("reponse body of\n{}\ndidnt match expected outcome\n{}", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone()));
+      failure_message.push_str(format!("reponse body of\n{}\ndidnt match expected outcome\n{}\n", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
       passed = false;
     }
   }
 
   if !test["expected_outcome"]["status_code_equals"].is_empty() {
     if response_status_code != test["expected_outcome"]["status_code_equals"].as_u16().unwrap() {
-      println!("reponse status code of {} didnt match expected outcome {}", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap());
-      println!("response body was {}", response_body);
+      failure_message.push_str(format!("reponse status code of {} didnt match expected outcome {}\n", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap()).as_str());
+      failure_message.push_str(format!("response body was {}\n", response_body).as_str());
       passed = false;
     }
   }
@@ -135,7 +149,8 @@ fn run_test(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> T
     return TestOutcomes::Passed
   } else {
     println!("failed");
-    return TestOutcomes::Failed;
+    failure_message.push('\n');
+    return TestOutcomes::Failed(failure_message);
   }
 }
 
