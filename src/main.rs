@@ -38,17 +38,17 @@ fn get_config_file() -> String {
 }
 
 fn run_config(config: &JsonValue, config_file: &JsonValue) -> bool {
-  println!("Running config {}: {}", config["name"], config["description"]);
+  println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config["name"], config["description"]);
   
   let mut test_outcomes: Vec<TestOutcomes> = Vec::new();
 
   for test_chain in config_file["tests"].members() {
-    println!("\n--------------\nrunning test chain {}", test_chain["name"]);
+    println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain["name"]);
     run_setup(config);
   
     let mut test_chain_outcomes: Vec<TestOutcomes> = test_chain["tests"]
       .members()
-      .map(|x| run_test(x, config, config_file))
+      .map(|x| run_test(x, config, config_file, test_chain["name"].as_str().unwrap()))
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
@@ -62,7 +62,7 @@ fn run_config(config: &JsonValue, config_file: &JsonValue) -> bool {
   let total_tests = test_outcomes.len();
 
   println!(
-    "\nConfig {} passed {} of {} tests",
+    "\nConfig \x1b[96m{}\x1b[0m passed {} of {} tests",
     config["name"],
     passed_tests,
     total_tests
@@ -114,8 +114,8 @@ fn run_cleanup(config: &JsonValue) {
   println!("cleanup completed");
 }
 
-fn run_test(test: &JsonValue, config: &JsonValue, config_file: &JsonValue) -> TestOutcomes {
-  print!("running test {}: ", test["name"]);
+fn run_test(test: &JsonValue, config: &JsonValue, config_file: &JsonValue, test_chain_name: &str) -> TestOutcomes {
+  print!("running test \x1b[96m{}\x1b[0m: ", test["name"]);
 
   let response = run_test_http_request(test, config, config_file);
 
@@ -127,28 +127,28 @@ fn run_test(test: &JsonValue, config: &JsonValue, config_file: &JsonValue) -> Te
   let response_status_code = response.status().as_u16();
   let response_body = response.text().unwrap();
 
-  let mut failure_message = format!("Test {} failed:\n", test["name"]);
+  let mut failure_message = format!("Test \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m \x1b[91mfailed\x1b[0m:\n", test_chain_name, test["name"]);
 
   if !test["expected_outcome"]["body_equals"].is_empty() {
     if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
-      failure_message.push_str(format!("reponse body of\n{}\ndidnt match expected outcome\n{}\n", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
+      failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
       passed = false;
     }
   }
 
   if !test["expected_outcome"]["status_code_equals"].is_empty() {
     if response_status_code != test["expected_outcome"]["status_code_equals"].as_u16().unwrap() {
-      failure_message.push_str(format!("reponse status code of {} didnt match expected outcome {}\n", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap()).as_str());
-      failure_message.push_str(format!("response body was {}\n", response_body).as_str());
+      failure_message.push_str(format!("\x1b[91mreponse status code of {} didnt match expected outcome {}\n\x1b[0m", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap()).as_str());
+      failure_message.push_str(format!("\x1b[95mresponse body was {}\n\x1b[0m", response_body).as_str());
       passed = false;
     }
   }
 
   if passed {
-    println!("passed");
+    println!("\x1b[92mpassed\x1b[0m");
     return TestOutcomes::Passed
   } else {
-    println!("failed");
+    println!("\x1b[91mfailed\x1b[0m");
     failure_message.push('\n');
     return TestOutcomes::Failed(failure_message);
   }
