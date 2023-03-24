@@ -218,7 +218,7 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Opt
     },
     "DELETE" => {
       client
-        .get(request_url)
+        .delete(request_url)
         .header(reqwest::header::COOKIE, cookie_string)
         .send()
         .unwrap()
