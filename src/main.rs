@@ -84,11 +84,17 @@ fn run_config(config: &JsonValue, config_file: &JsonValue) -> bool {
 
 fn run_setup(config: &JsonValue) {
   print!("setting up... ");
-  process::Command::new("sh")
+
+  let output = process::Command::new("sh")
     .arg("-c")
     .arg(config["setup"]["cmd"].as_str().unwrap())
     .output()
     .unwrap();
+
+
+  if output.stderr.len() > 0 {
+    println!("\x1b[91m{}\x1b[0m", String::from_utf8(output.stderr).unwrap_or(String::from("failed to convert stderr of setup")));
+  }
 
   if config["setup"]["finished_condition"]["endpoint_reachable"].is_string() {
     let mut request_url = String::from(config["api_hostname"].as_str().unwrap());
