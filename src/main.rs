@@ -216,6 +216,13 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Opt
         .send()
         .unwrap()
     },
+    "DELETE" => {
+      client
+        .get(request_url)
+        .header(reqwest::header::COOKIE, cookie_string)
+        .send()
+        .unwrap()
+    },
     "POST" => {
       client
         .post(request_url)
