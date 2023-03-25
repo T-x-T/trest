@@ -25,8 +25,8 @@ pub fn run(test: &JsonValue, config: &JsonValue, config_file: &JsonValue, test_c
     let response_body = response.unwrap().text().unwrap();
   
     if !test["expected_outcome"]["body_equals"].is_empty() {
-      if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
-        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
+      if json::parse(&response_body).unwrap_or(json::object! {}) != test["expected_outcome"]["body_equals"].clone() {
+        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test["expected_outcome"]["body_equals"].clone()).as_str());
         passed = false;
       }
     }
