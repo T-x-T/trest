@@ -123,30 +123,30 @@ fn run_cleanup(config: &JsonValue) {
 fn run_test(test: &JsonValue, config: &JsonValue, config_file: &JsonValue, test_chain_name: &str) -> TestOutcomes {
   print!("running test \x1b[96m{}\x1b[0m: ", test["name"]);
 
+  let mut failure_message = format!("Test \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m \x1b[91mfailed\x1b[0m:\n", test_chain_name, test["name"]);
+  let mut passed = true;
   let response = run_test_http_request(test, config, config_file);
 
-  //println!("response of test: {}", response);
-  //println!("expected outcome: {}", json::stringify(test["expected_outcome"].clone()));
-
-  let mut passed = true;
-
-  let response_status_code = response.status().as_u16();
-  let response_body = response.text().unwrap();
-
-  let mut failure_message = format!("Test \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m \x1b[91mfailed\x1b[0m:\n", test_chain_name, test["name"]);
-
-  if !test["expected_outcome"]["body_equals"].is_empty() {
-    if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
-      failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
-      passed = false;
+  if response.is_err() {
+    failure_message.push_str(format!("\x1b[91mgot an error while trying to perform web request: {}\n\x1b[0m", response.as_ref().err().unwrap().to_string()).as_str());
+    passed = false;
+  } else {
+    let response_status_code = response.as_ref().unwrap().status().as_u16();
+    let response_body = response.unwrap().text().unwrap();
+  
+    if !test["expected_outcome"]["body_equals"].is_empty() {
+      if response_body != json::stringify(test["expected_outcome"]["body_equals"].clone()) {
+        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, json::stringify(test["expected_outcome"]["body_equals"].clone())).as_str());
+        passed = false;
+      }
     }
-  }
-
-  if !test["expected_outcome"]["status_code_equals"].is_empty() {
-    if response_status_code != test["expected_outcome"]["status_code_equals"].as_u16().unwrap() {
-      failure_message.push_str(format!("\x1b[91mreponse status code of {} didnt match expected outcome {}\n\x1b[0m", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap()).as_str());
-      failure_message.push_str(format!("\x1b[95mresponse body was {}\n\x1b[0m", response_body).as_str());
-      passed = false;
+  
+    if !test["expected_outcome"]["status_code_equals"].is_empty() {
+      if response_status_code != test["expected_outcome"]["status_code_equals"].as_u16().unwrap() {
+        failure_message.push_str(format!("\x1b[91mreponse status code of {} didnt match expected outcome {}\n\x1b[0m", response_status_code, test["expected_outcome"]["status_code_equals"].as_u16().unwrap()).as_str());
+        failure_message.push_str(format!("\x1b[95mresponse body was {}\n\x1b[0m", response_body).as_str());
+        passed = false;
+      }
     }
   }
 
@@ -182,10 +182,14 @@ fn run_task<'a>(task: &'a str, config: &'a JsonValue, config_file: &JsonValue) -
     None
   );
 
-  return (task, response.text().unwrap());
+  if response.is_err() {
+    println!("Task \x1b[96m{}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{}\x1b[0m", task, response.as_ref().err().unwrap().to_string())
+  }
+
+  return (task, response.unwrap().text().unwrap());
 }
 
-fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> reqwest::blocking::Response {
+fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & JsonValue) -> Result<reqwest::blocking::Response, reqwest::Error> {
   let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
 
   let mut body: Option<&JsonValue> = None;
@@ -203,7 +207,7 @@ fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & Js
   );
 }
 
-fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Option<&JsonValue>, cookies: Option<&JsonValue>, before_task_results: Option<HashMap<&str, String>>) -> reqwest::blocking::Response {
+fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Option<&JsonValue>, cookies: Option<&JsonValue>, before_task_results: Option<HashMap<&str, String>>) -> Result<reqwest::blocking::Response, reqwest::Error> {
   let mut request_url = String::from(config["api_hostname"].as_str().unwrap());
   request_url.push_str(endpoint);
 
@@ -214,20 +218,18 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Opt
     cookie_string = parse_cookies(cookies.unwrap(), before_task_results.unwrap());
   }
   
-  return match method {
+  return Ok(match method {
     "GET" => {
       client
         .get(request_url)
         .header(reqwest::header::COOKIE, cookie_string)
-        .send()
-        .unwrap()
+        .send()?
     },
     "DELETE" => {
       client
         .delete(request_url)
         .header(reqwest::header::COOKIE, cookie_string)
-        .send()
-        .unwrap()
+        .send()?
     },
     "POST" => {
       client
@@ -235,8 +237,7 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Opt
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .header(reqwest::header::COOKIE, cookie_string)
         .body(body.unwrap_or(&json::object!{}).to_string())
-        .send()
-        .unwrap()
+        .send()?
     },
     "PUT" => {
       client
@@ -244,11 +245,10 @@ fn send_http_request(config: &JsonValue, method: &str, endpoint: &str, body: Opt
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .header(reqwest::header::COOKIE, cookie_string)
         .body(body.unwrap_or(&json::object!{}).to_string())
-        .send()
-        .unwrap()
+        .send()?
     },
     _ => panic!("tried to send http request with unrecognized method {}", method)
-  };
+  });
 }
 
 fn parse_cookies(cookies: &JsonValue, before_task_results: HashMap<&str, String>) -> String {
