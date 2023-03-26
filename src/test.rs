@@ -54,7 +54,7 @@ fn run_test_http_request(test: &JsonValue, config: &JsonValue, config_file: & Js
   let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
 
   let mut body: Option<&JsonValue> = None;
-  if test["body"].is_object() {
+  if !test["body"].is_null() {
     body = Some(&test["body"]);
   }
 
