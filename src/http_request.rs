@@ -59,7 +59,7 @@ fn parse_cookies(cookies: &JsonValue, before_task_results: HashMap<&str, String>
         let before_task_results = before_task_results.clone();
         let values = before_task_results.get(cookie_value.replace("$", "").split(".").collect::<Vec<&str>>()[0]).unwrap();
         let values = json::parse(values).unwrap();
-        output.push_str(values[cookie_value.replace("$", "").split(".").collect::<Vec<&str>>()[1]].as_str().unwrap());
+        output.push_str(values[cookie_value.replace("$", "").split(".").collect::<Vec<&str>>()[1]].as_str().unwrap_or(""));
       } else {
         output.push_str(cookie_value);
       }
