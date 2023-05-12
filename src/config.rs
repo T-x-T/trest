@@ -1,6 +1,6 @@
 use std::process;
 use json::{self, JsonValue};
-use crate::test::{self, TestOutcomes};
+use crate::test::{self, TestOutcomes, TestConfig};
 
 pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
   println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config["name"], config["description"]);
@@ -13,7 +13,7 @@ pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
   
     let mut test_chain_outcomes: Vec<TestOutcomes> = test_chain["tests"]
       .members()
-      .map(|x| test::run(x, config, config_file, test_chain["name"].as_str().unwrap()))
+      .map(|x| test::run(TestConfig::from_config(x, if test_chain.has_key("defaults") { Some(&test_chain["defaults"]) } else { None }), config, config_file, test_chain["name"].as_str().unwrap()))
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
@@ -38,7 +38,7 @@ pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
       match x {
         TestOutcomes::Passed => return,
         TestOutcomes::Failed(x) => println!("{}", x),
-    }
+      }
     });
     return true;
   } else {

@@ -47,6 +47,14 @@ Each object can look like this:
 ```json
 {
 	"name": "currency", //name of the test chain
+	"defaults": [ //Optional defaults for the individual tests, can be overridden in individual test config 
+		"cookies": { //Cookies to include with the request
+			"accessToken": "$login_as_admin.accessToken" //Create cookie accessToken using the accessToken key from outcome of the before task login_as_admin 
+		},
+		"before": [ //tasks to run before the test
+			"login_as_admin" //name of task
+		],
+	]
 	"tests": [
 		... //objects for the individual tests
 	]
