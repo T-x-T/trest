@@ -1,3 +1,13 @@
+#![deny(
+  clippy::pedantic,
+)]
+
+#![allow(
+  clippy::needless_return,
+  clippy::wildcard_imports,
+  clippy::unnecessary_unwrap,
+)]
+
 use std::{env, fs, process};
 
 mod http_request;
@@ -28,8 +38,7 @@ fn main() {
 
 fn get_config_file() -> String {
   let args: Vec<String> = env::args().collect();
-  if args.len() < 2 {
-    panic!("failed to get config file path");
-  }
+  assert!((args.len() >= 2), "failed to get config file path");
+
   return fs::read_to_string(args[1].clone()).expect("failed to read config file");
 }

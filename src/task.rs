@@ -17,7 +17,7 @@ pub fn run<'a>(task: &'a str, config: &'a JsonValue, config_file: &JsonValue) ->
   );
 
   if response.is_err() {
-    println!("Task \x1b[96m{}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{}\x1b[0m", task, response.as_ref().err().unwrap().to_string())
+    println!("Task \x1b[96m{}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{}\x1b[0m", task, response.as_ref().err().unwrap().to_string());
   }
 
   return (task, response.unwrap().text().unwrap());

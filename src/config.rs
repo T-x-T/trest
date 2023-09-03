@@ -1,19 +1,19 @@
 use std::process;
 use json::{self, JsonValue};
-use crate::test::{self, TestOutcomes, TestConfig};
+use crate::test::{self, Outcomes, Config};
 
 pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
   println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config["name"], config["description"]);
   
-  let mut test_outcomes: Vec<TestOutcomes> = Vec::new();
+  let mut test_outcomes: Vec<Outcomes> = Vec::new();
 
   for test_chain in config_file["tests"].members() {
     println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain["name"]);
     run_setup(config);
   
-    let mut test_chain_outcomes: Vec<TestOutcomes> = test_chain["tests"]
+    let mut test_chain_outcomes: Vec<Outcomes> = test_chain["tests"]
       .members()
-      .map(|x| test::run(TestConfig::from_config(x, if test_chain.has_key("defaults") { Some(&test_chain["defaults"]) } else { None }), config, config_file, test_chain["name"].as_str().unwrap()))
+      .map(|x| test::run(&Config::from_config(x, if test_chain.has_key("defaults") { Some(&test_chain["defaults"]) } else { None }), config, config_file, test_chain["name"].as_str().unwrap()))
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
@@ -23,7 +23,7 @@ pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
     }
   }
 
-  let passed_tests = test_outcomes.iter().filter(|x| **x == TestOutcomes::Passed).collect::<Vec<_>>().len();
+  let passed_tests = test_outcomes.iter().filter(|x| **x == Outcomes::Passed).collect::<Vec<_>>().len();
   let total_tests = test_outcomes.len();
 
   println!(
@@ -33,18 +33,17 @@ pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
     total_tests
   );
 
-  if passed_tests != total_tests {
-    test_outcomes.iter().for_each(|x| {
-      match x {
-        TestOutcomes::Passed => return,
-        TestOutcomes::Failed(x) => println!("{}", x),
-      }
-    });
-    return true;
-  } else {
+  if passed_tests == total_tests {
     return false;
   }
 
+  for x in test_outcomes {
+    match x {
+      Outcomes::Passed => continue,
+      Outcomes::Failed(x) => println!("{x}"),
+    }
+  }
+  return true;
 }
 
 fn run_setup(config: &JsonValue) {
@@ -57,7 +56,7 @@ fn run_setup(config: &JsonValue) {
     .unwrap();
 
 
-  if output.stderr.len() > 0 {
+  if !output.stderr.is_empty() {
     println!("\x1b[91m{}\x1b[0m", String::from_utf8(output.stderr).unwrap_or(String::from("failed to convert stderr of setup")));
   }
 

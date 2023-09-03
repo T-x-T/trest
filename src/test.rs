@@ -5,12 +5,12 @@ use crate::http_request;
 use crate::task;
 
 #[derive(PartialEq)]
-pub enum TestOutcomes {
+pub enum Outcomes {
   Passed, 
   Failed(String)
 }
 
-pub struct TestConfig {
+pub struct Config {
   name: String,
   endpoint: String,
   method: String,
@@ -25,7 +25,7 @@ enum ExpectedOutcome {
   BodyEquals(JsonValue),
 }
 
-impl TestConfig {
+impl Config {
   pub fn from_config(config: &JsonValue, defaults: Option<&JsonValue>) -> Self {
     let mut expected_outcome: Vec<ExpectedOutcome> = Vec::new();
     if config["expected_outcome"].has_key("status_code_equals") {
@@ -36,9 +36,9 @@ impl TestConfig {
     }
 
     let before: Vec<String> = if config.has_key("before") {
-      config["before"].members().map(|x| x.to_string()).collect()
+      config["before"].members().map(std::string::ToString::to_string).collect()
     } else if !defaults.unwrap_or(&json::object!{})["before"].is_empty() {
-      defaults.unwrap()["before"].clone().members().map(|x| x.to_string()).collect() 
+      defaults.unwrap()["before"].clone().members().map(std::string::ToString::to_string).collect() 
     } else {
       Vec::new()
     };
@@ -47,7 +47,7 @@ impl TestConfig {
       name: config["name"].to_string(),
       endpoint: config["endpoint"].to_string(),
       method: config["method"].to_string(),
-      body: if !config["body"].is_empty() { Some(config["body"].clone()) } else { None },
+      body: if config["body"].is_empty() { None } else { Some(config["body"].clone()) },
       cookies: if !config["cookies"].is_empty() { 
         Some(config["cookies"].clone()) 
       } else if !defaults.unwrap_or(&json::object!{})["cookies"].is_empty() {
@@ -61,12 +61,12 @@ impl TestConfig {
   }
 }
 
-pub fn run(test: TestConfig, config: &JsonValue, config_file: &JsonValue, test_chain_name: &str) -> TestOutcomes {
+pub fn run(test: &Config, config: &JsonValue, config_file: &JsonValue, test_chain_name: &str) -> Outcomes {
   print!("running test \x1b[96m{}\x1b[0m: ", test.name);
 
   let mut failure_message = format!("Test \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m \x1b[91mfailed\x1b[0m:\n", test_chain_name, test.name);
   let mut passed = true;
-  let response = run_test_http_request(&test, config, config_file);
+  let response = run_test_http_request(test, config, config_file);
 
   if response.is_err() {
     failure_message.push_str(format!("\x1b[91mgot an error while trying to perform web request: {}\n\x1b[0m", response.as_ref().err().unwrap().to_string()).as_str());
@@ -96,16 +96,16 @@ pub fn run(test: TestConfig, config: &JsonValue, config_file: &JsonValue, test_c
 
   if passed {
     println!("\x1b[92mpassed\x1b[0m");
-    return TestOutcomes::Passed
-  } else {
-    println!("\x1b[91mfailed\x1b[0m");
-    failure_message.push('\n');
-    return TestOutcomes::Failed(failure_message);
+    return Outcomes::Passed
   }
+    
+  println!("\x1b[91mfailed\x1b[0m");
+  failure_message.push('\n');
+  return Outcomes::Failed(failure_message);
 }
 
-fn run_test_http_request(test: &TestConfig, config: &JsonValue, config_file: & JsonValue) -> Result<reqwest::blocking::Response, reqwest::Error> {
-  let before_task_results: HashMap<&str, String> = run_test_before_tasks(&test, config, config_file);
+fn run_test_http_request(test: &Config, config: &JsonValue, config_file: & JsonValue) -> Result<reqwest::blocking::Response, reqwest::Error> {
+  let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
 
   return http_request::send(
     config,
@@ -117,7 +117,7 @@ fn run_test_http_request(test: &TestConfig, config: &JsonValue, config_file: & J
   );
 }
 
-fn run_test_before_tasks<'a>(test: &'a TestConfig, config: &'a JsonValue, config_file: &'a JsonValue) -> HashMap<&'a str, String> {
+fn run_test_before_tasks<'a>(test: &'a Config, config: &'a JsonValue, config_file: &'a JsonValue) -> HashMap<&'a str, String> {
   return test.before
     .iter()
     .map(|x| task::run(x, config, config_file))
