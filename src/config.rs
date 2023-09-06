@@ -1,34 +1,33 @@
 use std::process;
-use json::{self, JsonValue};
-use crate::test::{self, Outcomes, Config};
+use crate::{Config, ConfigFile, test};
 
-pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
-  println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config["name"], config["description"]);
+pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
+  println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config.name, config.description);
   
-  let mut test_outcomes: Vec<Outcomes> = Vec::new();
+  let mut test_outcomes: Vec<test::TestResults> = Vec::new();
 
-  for test_chain in config_file["tests"].members() {
-    println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain["name"]);
+  for test_chain in config_file.tests.iter() {
+    println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain.name);
     run_setup(config);
   
-    let mut test_chain_outcomes: Vec<Outcomes> = test_chain["tests"]
-      .members()
-      .map(|x| test::run(&Config::from_config(x, if test_chain.has_key("defaults") { Some(&test_chain["defaults"]) } else { None }), config, config_file, test_chain["name"].as_str().unwrap()))
+    let mut test_chain_outcomes: Vec<test::TestResults> = test_chain.tests
+      .iter()
+      .map(|test| test::run(&test, config, config_file, &test_chain.name))
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
   
-    if config["cleanup"]["cmd"].is_string() {
-      run_cleanup(config);
+    if !config.cleanup.cmd.is_empty() {
+      run_cleanup(&config.cleanup.cmd);
     }
   }
 
-  let passed_tests = test_outcomes.iter().filter(|x| **x == Outcomes::Passed).collect::<Vec<_>>().len();
+  let passed_tests = test_outcomes.iter().filter(|x| **x == test::TestResults::Passed).collect::<Vec<_>>().len();
   let total_tests = test_outcomes.len();
 
   println!(
     "\nConfig \x1b[96m{}\x1b[0m passed {} of {} tests",
-    config["name"],
+    config.name,
     passed_tests,
     total_tests
   );
@@ -39,19 +38,19 @@ pub fn run(config: &JsonValue, config_file: &JsonValue) -> bool {
 
   for x in test_outcomes {
     match x {
-      Outcomes::Passed => continue,
-      Outcomes::Failed(x) => println!("{x}"),
+      test::TestResults::Passed => continue,
+      test::TestResults::Failed(x) => println!("{x}"),
     }
   }
   return true;
 }
 
-fn run_setup(config: &JsonValue) {
+fn run_setup(config: &Config) {
   print!("setting up... ");
 
   let output = process::Command::new("sh")
     .arg("-c")
-    .arg(config["setup"]["cmd"].as_str().unwrap())
+    .arg(&config.setup.cmd)
     .output()
     .unwrap();
 
@@ -60,9 +59,9 @@ fn run_setup(config: &JsonValue) {
     println!("\x1b[91m{}\x1b[0m", String::from_utf8(output.stderr).unwrap_or(String::from("failed to convert stderr of setup")));
   }
 
-  if config["setup"]["finished_condition"]["endpoint_reachable"].is_string() {
-    let mut request_url = String::from(config["api_hostname"].as_str().unwrap());
-    request_url.push_str(config["setup"]["finished_condition"]["endpoint_reachable"].as_str().unwrap());
+  if !config.setup.finished_condition.endpoint_reachable.is_empty() {
+    let mut request_url = String::from(&config.api_hostname);
+    request_url.push_str(&config.setup.finished_condition.endpoint_reachable);
     loop {
       match reqwest::blocking::Client::new().get(&request_url).send() {
         Ok(_) => break,
@@ -74,11 +73,11 @@ fn run_setup(config: &JsonValue) {
   println!("setup completed");
 }
 
-fn run_cleanup(config: &JsonValue) {
+fn run_cleanup(cmd: &str) {
   print!("cleaning up... ");
   process::Command::new("sh")
     .arg("-c")
-    .arg(config["cleanup"]["cmd"].as_str().unwrap())
+    .arg(cmd)
     .output()
     .unwrap();
   println!("cleanup completed");

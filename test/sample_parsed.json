@@ -145,6 +145,12 @@
 					"name": "retrieval of all recipients works",
 					"endpoint": "/api/v1/recipients/all",
 					"method": "GET",
+					"cookies": {
+						"accessToken": "$login_as_admin.accessToken"
+					},
+					"before": [
+						"login_as_admin"
+					],
 					"expected_outcome": {
 						"status_code_equals": 200,
 						"body_equals": [{"id":0,"name":"Default","user_id":null,"tag_ids":[]}]
@@ -154,6 +160,12 @@
 					"name": "post of new recipient returns 200",
 					"endpoint": "/api/v1/recipients",
 					"method": "POST",
+					"cookies": {
+						"accessToken": "$login_as_admin.accessToken"
+					},
+					"before": [
+						"login_as_admin"
+					],
 					"body": {
 						"name": "test"
 					},
@@ -165,6 +177,12 @@
 					"name": "new recipient created correctly",
 					"endpoint": "/api/v1/recipients/all",
 					"method": "GET",
+					"cookies": {
+						"accessToken": "$login_as_admin.accessToken"
+					},
+					"before": [
+						"login_as_admin"
+					],
 					"expected_outcome": {
 						"status_code_equals": 200,
 						"body_equals": [{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"test","user_id":0,"tag_ids":[]}]
@@ -174,6 +192,12 @@
 					"name": "updating name of recipient returns 200",
 					"endpoint": "/api/v1/recipients/1",
 					"method": "PUT",
+					"cookies": {
+						"accessToken": "$login_as_admin.accessToken"
+					},
+					"before": [
+						"login_as_admin"
+					],
 					"body": {
 						"name":"edited test"
 					},
@@ -185,6 +209,12 @@
 					"name": "updated recipient name saved correctly",
 					"endpoint": "/api/v1/recipients/all",
 					"method": "GET",
+					"cookies": {
+						"accessToken": "$login_as_admin.accessToken"
+					},
+					"before": [
+						"login_as_admin"
+					],
 					"expected_outcome": {
 						"status_code_equals": 200,
 						"body_equals": [{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"edited test","user_id":0,"tag_ids":[]}]

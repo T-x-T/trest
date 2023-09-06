@@ -350,10 +350,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "json"
-version = "0.12.4"
+name = "jzon"
+version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
+checksum = "17ab85f84ca42c5ec520e6f3c9966ba1fd62909ce260f8837e248857d2560509"
 
 [[package]]
 name = "lazy_static"
@@ -366,6 +366,21 @@ name = "libc"
 version = "0.2.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+
+[[package]]
+name = "linked-hash-map"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
+
+[[package]]
+name = "linked_hash_set"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47186c6da4d81ca383c7c47c1bfc80f4b95f4720514d860a5407aaf4233f9588"
+dependencies = [
+ "linked-hash-map",
+]
 
 [[package]]
 name = "linux-raw-sys"
@@ -783,7 +798,9 @@ dependencies = [
 name = "trest"
 version = "0.1.0"
 dependencies = [
- "json",
+ "jzon",
+ "linked-hash-map",
+ "linked_hash_set",
  "reqwest",
 ]
 
