@@ -6,6 +6,7 @@
   clippy::needless_return,
   clippy::wildcard_imports,
   clippy::unnecessary_unwrap,
+  clippy::module_name_repetitions,
 )]
 
 use linked_hash_map::LinkedHashMap;
@@ -45,12 +46,12 @@ fn get_config_file() -> ConfigFile {
   let config_file = fs::read_to_string(args[1].clone()).expect("failed to read config file");
   let json_pared_config_file = jzon::parse(&config_file).expect("failed to parse config");
   let timestamp_before = std::time::Instant::now();
-  let parsed_config_file = parse_config_file(json_pared_config_file);
+  let parsed_config_file = parse_config_file(&json_pared_config_file);
   println!("Parsed config file in {}ms", timestamp_before.elapsed().as_millis());
   return parsed_config_file;
 }
 
-fn parse_config_file(input: jzon::JsonValue) -> ConfigFile {
+fn parse_config_file(input: &jzon::JsonValue) -> ConfigFile {
   return ConfigFile { 
     configs: input["configs"].members().map(|x| Config {
       name: x["name"].to_string(),
@@ -75,7 +76,7 @@ fn parse_config_file(input: jzon::JsonValue) -> ConfigFile {
       name: test_chain["name"].to_string(),
       defaults: if test_chain["defaults"].is_null() { None } else { Some(PartialTest {
         cookies: if test_chain["defaults"]["cookies"].is_null() { None } else { Some(test_chain["defaults"]["cookies"].entries().map(|(k, v)| (k.to_string(), v.to_string())).collect()) },
-        before: if test_chain["defaults"]["before"].is_null() { None } else { Some(test_chain["defaults"]["before"].members().map(|x| x.to_string()).collect()) },
+        before: if test_chain["defaults"]["before"].is_null() { None } else { Some(test_chain["defaults"]["before"].members().map(std::string::ToString::to_string).collect()) },
       })},
       tests: test_chain["tests"].members().map(|test| Test {
         name: test["name"].to_string(),
@@ -86,8 +87,8 @@ fn parse_config_file(input: jzon::JsonValue) -> ConfigFile {
           if test_chain["defaults"]["cookies"].is_null() { None } else { Some(test_chain["defaults"]["cookies"].entries().map(|(k, v)| (k.to_string(), v.to_string())).collect()) }
         } else { Some(test["cookies"].entries().map(|(k, v)| (k.to_string(), v.to_string())).collect()) },
         before: if test["before"].is_null() { 
-          if test_chain["defaults"]["before"].is_null() { None } else { Some(test_chain["defaults"]["before"].members().map(|x| x.to_string()).collect()) }
-        } else { Some(test["before"].members().map(|x| x.to_string()).collect()) },
+          if test_chain["defaults"]["before"].is_null() { None } else { Some(test_chain["defaults"]["before"].members().map(std::string::ToString::to_string).collect()) }
+        } else { Some(test["before"].members().map(std::string::ToString::to_string).collect()) },
         expected_outcome: TestOutcome {
           status_code_equals: test["expected_outcome"]["status_code_equals"].as_usize(),
           body_equals: if test["expected_outcome"]["body_equals"].is_null() { None } else { Some(test["expected_outcome"]["body_equals"].to_string()) },
@@ -347,7 +348,7 @@ mod unit_test {
       ].into_iter().collect(),
     };
 
-    let res = crate::parse_config_file(jzon::parse(fs::read_to_string("./test/sample_parsed.json").unwrap().as_str()).unwrap());
+    let res = crate::parse_config_file(&jzon::parse(fs::read_to_string("./test/sample_parsed.json").unwrap().as_str()).unwrap());
 
     assert_eq!(res, config_file);
   }

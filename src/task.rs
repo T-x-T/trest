@@ -5,7 +5,7 @@ pub fn run(config: &Config, task: &Task, task_name: &str) -> String {
     config,
     &task.method,
     &task.endpoint,
-    task.body.as_ref().map(|x| x.as_str()),
+    task.body.as_deref(),
     None,
     None
   );

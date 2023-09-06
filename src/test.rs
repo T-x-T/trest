@@ -22,19 +22,17 @@ pub fn run(test: &Test, config: &Config, config_file: &ConfigFile, test_chain_na
     let response_status_code = response.as_ref().unwrap().status().as_u16();
     let response_body = response.unwrap().text().unwrap();
 
-    if test.expected_outcome.body_equals.is_some() {
-      if jzon::parse(&response_body) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()) {
-        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test.expected_outcome.body_equals.as_ref().unwrap()).as_str());
-        passed = false;
-      }
+    if test.expected_outcome.body_equals.is_some()
+    && jzon::parse(&response_body) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()) {
+      failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test.expected_outcome.body_equals.as_ref().unwrap()).as_str());
+      passed = false;
     }
 
-    if test.expected_outcome.status_code_equals.is_some() {
-      if response_status_code as usize != test.expected_outcome.status_code_equals.unwrap() {
-        failure_message.push_str(format!("\x1b[91mreponse status code of {} didnt match expected outcome {}\n\x1b[0m", response_status_code, test.expected_outcome.status_code_equals.unwrap()).as_str());
-        failure_message.push_str(format!("\x1b[95mresponse body was {}\n\x1b[0m", response_body).as_str());
-        passed = false;
-      }
+    if test.expected_outcome.status_code_equals.is_some()
+    && response_status_code as usize != test.expected_outcome.status_code_equals.unwrap() {
+      failure_message.push_str(format!("\x1b[91mreponse status code of {} didnt match expected outcome {}\n\x1b[0m", response_status_code, test.expected_outcome.status_code_equals.unwrap()).as_str());
+      failure_message.push_str(format!("\x1b[95mresponse body was {response_body}\n\x1b[0m").as_str());
+      passed = false;
     }
   }
 
@@ -55,7 +53,7 @@ fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigFile)
     config,
     test.method.as_str(),
     test.endpoint.as_str(),
-    test.body.as_ref().map(|x| x.as_str()),
+    test.body.as_deref(),
     test.cookies.as_ref(),
     Some(before_task_results),
   );

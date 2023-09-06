@@ -12,7 +12,7 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
   
     let mut test_chain_outcomes: Vec<test::TestResults> = test_chain.tests
       .iter()
-      .map(|test| test::run(&test, config, config_file, &test_chain.name))
+      .map(|test| test::run(test, config, config_file, &test_chain.name))
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
