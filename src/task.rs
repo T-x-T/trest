@@ -14,5 +14,5 @@ pub fn run(config: &Config, task: &Task, task_name: &str) -> String {
     println!("Task \x1b[96m{}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{}\x1b[0m", task_name, response.as_ref().err().unwrap().to_string());
   }
 
-  return response.unwrap().text().unwrap();
+  return response.unwrap().into_string().unwrap();
 }

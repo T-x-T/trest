@@ -3,45 +3,40 @@ use linked_hash_map::LinkedHashMap;
 
 use crate::Config;
 
-pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<HashMap<&str, String>>) -> Result<reqwest::blocking::Response, reqwest::Error> {
+pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<HashMap<&str, String>>) -> Result<ureq::Response, ureq::Error> {
   let mut request_url = String::from(&config.api_hostname);
   request_url.push_str(endpoint); 
-
-  let client = reqwest::blocking::Client::new();
   
-  let mut cookie_string = String::new();
-  if cookies.is_some() {
-    cookie_string = parse_cookies(cookies.unwrap(), &before_task_results.unwrap());
-  }
+  let cookie_string = if cookies.is_some() {
+    parse_cookies(cookies.unwrap(), before_task_results.as_ref().unwrap())
+  } else {
+    String::new()
+  };
+
+  let cookie_string = cookie_string.as_str();
   
   return Ok(match method {
     "GET" => {
-      client
-        .get(request_url)
-        .header(reqwest::header::COOKIE, cookie_string)
-        .send()?
+      ureq::get(request_url.as_str())
+        .set("Cookie", cookie_string)
+        .call()?
     },
     "DELETE" => {
-      client
-        .delete(request_url)
-        .header(reqwest::header::COOKIE, cookie_string)
-        .send()?
+      ureq::delete(request_url.as_str())
+        .set("Cookie", cookie_string)
+        .call()?
     },
     "POST" => {
-      client
-        .post(request_url)
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .header(reqwest::header::COOKIE, cookie_string)
-        .body(body.unwrap_or("").to_string())
-        .send()?
+      ureq::post(request_url.as_str())
+        .set("Content-Type", "application/json")
+        .set("Cookie", cookie_string)
+        .send_string(body.unwrap_or(""))?
     },
     "PUT" => {
-      client
-        .put(request_url)
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .header(reqwest::header::COOKIE, cookie_string)
-        .body(body.unwrap_or("").to_string())
-        .send()?
+      ureq::put(request_url.as_str())
+        .set("Content-Type", "application/json")
+        .set("Cookie", cookie_string)
+        .send_string(body.unwrap_or(""))?
     },
     _ => panic!("tried to send http request with unrecognized method {method}"),
   });

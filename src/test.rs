@@ -19,13 +19,19 @@ pub fn run(test: &Test, config: &Config, config_file: &ConfigFile, test_chain_na
     failure_message.push_str(format!("\x1b[91mgot an error while trying to perform web request: {}\n\x1b[0m", response.as_ref().err().unwrap().to_string()).as_str());
     passed = false;
   } else {
-    let response_status_code = response.as_ref().unwrap().status().as_u16();
-    let response_body = response.unwrap().text().unwrap();
+    let response = response.unwrap();
+    let response_status_code = response.status();
+    let respoonse_content_type = String::from(response.content_type());
+    let response_body = response.into_string().unwrap();
 
-    if test.expected_outcome.body_equals.is_some()
-    && jzon::parse(&response_body) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()) {
-      failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test.expected_outcome.body_equals.as_ref().unwrap()).as_str());
-      passed = false;
+    if test.expected_outcome.body_equals.is_some() {
+      if respoonse_content_type == "application/json" && (jzon::parse(&response_body) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap())) {
+        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test.expected_outcome.body_equals.as_ref().unwrap()).as_str());
+        passed = false;
+      } else if response_body != response_body {
+        failure_message.push_str(format!("\x1b[91mreponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", response_body, test.expected_outcome.body_equals.as_ref().unwrap()).as_str());
+        passed = false;
+      }
     }
 
     if test.expected_outcome.status_code_equals.is_some()
@@ -46,7 +52,7 @@ pub fn run(test: &Test, config: &Config, config_file: &ConfigFile, test_chain_na
   return TestResults::Failed(failure_message);
 }
 
-fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigFile) -> Result<reqwest::blocking::Response, reqwest::Error> {
+fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigFile) -> Result<ureq::Response, ureq::Error> {
   let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
 
   return http_request::send(

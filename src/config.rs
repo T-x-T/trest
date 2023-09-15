@@ -62,11 +62,18 @@ fn run_setup(config: &Config) {
   if !config.setup.finished_condition.endpoint_reachable.is_empty() {
     let mut request_url = String::from(&config.api_hostname);
     request_url.push_str(&config.setup.finished_condition.endpoint_reachable);
+    
     loop {
-      match reqwest::blocking::Client::new().get(&request_url).send() {
+      match ureq::get(&request_url).call() {
         Ok(_) => break,
-        Err(_) => continue,
-      }
+        Err(e) => {
+          if e.kind() == ureq::ErrorKind::ConnectionFailed || e.kind() == ureq::ErrorKind::Io {
+            continue;
+          } else {
+            break;
+          }
+        }
+      };
     }
   }
 
