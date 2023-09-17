@@ -73,9 +73,9 @@ Each object can look like this:
 	"before": [ //tasks to run before the test
 		"login_as_admin" //name of task
 	],
-	"expected_outcome": { //information to check if the reponse matches what we expect
+	"expected_outcome": { //information to check if the response matches what we expect
 		"status_code_equals": 200, //matches status code
-		"body_equals": [{"id":0,"name":"Euro","minor_in_mayor":100,"symbol":"€"},{"id":1,"name":"USD","minor_in_mayor":100,"symbol":"$"}] //matches body of the reponse
+		"body_equals": [{"id":0,"name":"Euro","minor_in_mayor":100,"symbol":"€"},{"id":1,"name":"USD","minor_in_mayor":100,"symbol":"$"}] //matches body of the response
 	} 
 }
 ```

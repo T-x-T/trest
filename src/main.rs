@@ -161,7 +161,7 @@ pub struct Test {
   pub expected_outcome: TestOutcome,
 }
 
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq, Default)]
 pub struct TestOutcome {
   pub status_code_equals: Option<usize>,
   pub body_equals: Option<String>,

@@ -4,15 +4,27 @@ use crate::{Config, ConfigFile, test};
 pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
   println!("Running config \x1b[96m{}\x1b[0m: \x1b[96m{}\x1b[0m", config.name, config.description);
   
-  let mut test_outcomes: Vec<test::TestResults> = Vec::new();
+  let mut test_outcomes: Vec<Option<String>> = Vec::new();
 
   for test_chain in config_file.tests.iter() {
     println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain.name);
     run_setup(config);
   
-    let mut test_chain_outcomes: Vec<test::TestResults> = test_chain.tests
+    let mut test_chain_outcomes: Vec<Option<String>> = test_chain.tests
       .iter()
-      .map(|test| test::run(test, config, config_file, &test_chain.name))
+      .map(|test| {
+        print!("running test \x1b[96m{}\x1b[0m: ", test.name);
+        let response = test::run_test_http_request(test, config, config_file);
+        let response_status_code = response.status();
+        let response_content_type = String::from(response.content_type());
+        let response_body = response.into_string().unwrap();
+        let result = test::check_test_result(test, response_status_code, &response_content_type, &response_body);
+
+        return match result {
+          test::TestResults::Passed => None,
+          test::TestResults::Failed(actual_outcome) => Some(test::stringify_test_outcome(&actual_outcome, &test.expected_outcome, &response_body, &test_chain.name, &test.name)),
+        };
+      })
       .collect();
 
     test_outcomes.append(&mut test_chain_outcomes);
@@ -22,7 +34,7 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
     }
   }
 
-  let passed_tests = test_outcomes.iter().filter(|x| **x == test::TestResults::Passed).collect::<Vec<_>>().len();
+  let passed_tests = test_outcomes.iter().filter(|x| x.is_none()).collect::<Vec<_>>().len();
   let total_tests = test_outcomes.len();
 
   println!(
@@ -38,8 +50,8 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
 
   for x in test_outcomes {
     match x {
-      test::TestResults::Passed => continue,
-      test::TestResults::Failed(x) => println!("{x}"),
+      None => continue,
+      Some(x) => println!("{x}"),
     }
   }
   return true;
@@ -69,9 +81,9 @@ fn run_setup(config: &Config) {
         Err(e) => {
           if e.kind() == ureq::ErrorKind::ConnectionFailed || e.kind() == ureq::ErrorKind::Io {
             continue;
-          } else {
-            break;
           }
+          
+          break;
         }
       };
     }

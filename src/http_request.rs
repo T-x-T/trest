@@ -3,7 +3,7 @@ use linked_hash_map::LinkedHashMap;
 
 use crate::Config;
 
-pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<HashMap<&str, String>>) -> Result<ureq::Response, ureq::Error> {
+pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<&HashMap<&str, String>>) -> Result<ureq::Response, Box<ureq::Error>> {
   let mut request_url = String::from(&config.api_hostname);
   request_url.push_str(endpoint); 
   
