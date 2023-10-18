@@ -16,9 +16,9 @@ pub fn check_test_result(test: &Test, response_status_code: u16, response_conten
   let mut actual_outcome: TestOutcome = TestOutcome::default();
 
   if test.expected_outcome.body_equals.is_some() {
-    if response_content_type == "application/json" && (jzon::parse(response_body) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap())) {
+    if response_content_type == "application/json" && (jzon::parse(response_body).unwrap() != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()).unwrap()) {
       actual_outcome.body_equals = Some(String::from(response_body));
-    } else if test.expected_outcome.body_equals.as_ref().unwrap() != response_body {
+    } else if response_content_type != "application/json" && test.expected_outcome.body_equals.as_ref().unwrap() != response_body {
       actual_outcome.body_equals = Some(String::from(response_body));
     }
   }
@@ -45,7 +45,7 @@ pub fn stringify_test_outcome(actual_outcome: &TestOutcome, expected_outcome: &T
   }
 
   if actual_outcome.body_equals.is_some() {
-    output_parts.push(format!("\x1b[91mresponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", actual_outcome.body_equals.as_ref().unwrap(), expected_outcome.body_equals.as_ref().unwrap()));
+    output_parts.push(format!("\x1b[91mresponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", jzon::parse(actual_outcome.body_equals.as_ref().unwrap()).unwrap(), jzon::parse(expected_outcome.body_equals.as_ref().unwrap()).unwrap()));
   }
 
   if actual_outcome.status_code_equals.is_some() {
@@ -69,7 +69,7 @@ pub fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigF
     test.body.as_deref(),
     test.cookies.as_ref(),
     Some(&before_task_results),
-  ).unwrap();
+  );
 }
 
 fn run_test_before_tasks<'a>(test: &'a Test, config: &'a Config, config_file: &'a ConfigFile) -> HashMap<&'a str, String> {

@@ -10,9 +10,12 @@ pub fn run(config: &Config, task: &Task, task_name: &str) -> String {
     None
   );
 
-  if response.is_err() {
-    println!("Task \x1b[96m{}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{}\x1b[0m", task_name, response.as_ref().err().unwrap().to_string());
+  let response_status = response.status();
+  let response_body = response.into_string().unwrap_or_default();
+
+  if response_status >= 400 {
+    println!("Task \x1b[96m{task_name}\x1b[0m got an error while trying to send a web request:\n\x1b[91m{response_body}\x1b[0m");
   }
 
-  return response.unwrap().into_string().unwrap();
+  return response_body;
 }

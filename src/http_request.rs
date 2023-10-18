@@ -3,7 +3,7 @@ use linked_hash_map::LinkedHashMap;
 
 use crate::Config;
 
-pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<&HashMap<&str, String>>) -> Result<ureq::Response, Box<ureq::Error>> {
+pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<&HashMap<&str, String>>) -> ureq::Response {
   let mut request_url = String::from(&config.api_hostname);
   request_url.push_str(endpoint); 
   
@@ -15,31 +15,36 @@ pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, c
 
   let cookie_string = cookie_string.as_str();
   
-  return Ok(match method {
+  let res = match method {
     "GET" => {
       ureq::get(request_url.as_str())
         .set("Cookie", cookie_string)
-        .call()?
+        .call()
     },
     "DELETE" => {
       ureq::delete(request_url.as_str())
         .set("Cookie", cookie_string)
-        .call()?
+        .call()
     },
     "POST" => {
       ureq::post(request_url.as_str())
         .set("Content-Type", "application/json")
         .set("Cookie", cookie_string)
-        .send_string(body.unwrap_or(""))?
+        .send_string(body.unwrap_or(""))
     },
     "PUT" => {
       ureq::put(request_url.as_str())
         .set("Content-Type", "application/json")
         .set("Cookie", cookie_string)
-        .send_string(body.unwrap_or(""))?
+        .send_string(body.unwrap_or(""))
     },
     _ => panic!("tried to send http request with unrecognized method {method}"),
-  });
+  };
+
+  return match res {
+    Ok(x) => x,
+    Err(e) => e.into_response().unwrap()
+  }
 }
 
 fn parse_cookies(cookies: &LinkedHashMap<String, String>, before_task_results: &HashMap<&str, String>) -> String {
