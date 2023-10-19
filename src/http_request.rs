@@ -43,7 +43,7 @@ pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, c
 
   return match res {
     Ok(x) => x,
-    Err(e) => e.into_response().unwrap()
+    Err(e) => e.into_response().unwrap_or(ureq::Response::new(999, "", "").unwrap())
   }
 }
 

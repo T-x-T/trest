@@ -45,7 +45,11 @@ pub fn stringify_test_outcome(actual_outcome: &TestOutcome, expected_outcome: &T
   }
 
   if actual_outcome.body_equals.is_some() {
-    output_parts.push(format!("\x1b[91mresponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", jzon::parse(actual_outcome.body_equals.as_ref().unwrap()).unwrap(), jzon::parse(expected_outcome.body_equals.as_ref().unwrap()).unwrap()));
+    if jzon::parse(actual_outcome.body_equals.as_ref().unwrap()).is_ok() && jzon::parse(expected_outcome.body_equals.as_ref().unwrap()).is_ok() {
+      output_parts.push(format!("\x1b[91mresponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", jzon::parse(actual_outcome.body_equals.as_ref().unwrap()).unwrap(), jzon::parse(expected_outcome.body_equals.as_ref().unwrap()).unwrap()));
+    } else {
+      output_parts.push(format!("\x1b[91mresponse body of\n{}\ndidnt match expected outcome\n{}\n\x1b[0m", actual_outcome.body_equals.as_ref().unwrap(), expected_outcome.body_equals.clone().unwrap_or_default()));
+    }
   }
 
   if actual_outcome.status_code_equals.is_some() {
