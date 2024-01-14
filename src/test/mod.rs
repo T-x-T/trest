@@ -16,7 +16,7 @@ pub fn check_test_result(test: &Test, response_status_code: u16, response_conten
   let mut actual_outcome: TestOutcome = TestOutcome::default();
 
   if test.expected_outcome.body_equals.is_some() {
-    if response_content_type == "application/json" && (jzon::parse(response_body).unwrap() != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()).unwrap()) {
+    if response_content_type == "application/json" && (jzon::parse(response_body).unwrap_or(jzon::JsonValue::new_object()) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()).unwrap()) {
       actual_outcome.body_equals = Some(String::from(response_body));
     } else if response_content_type != "application/json" && test.expected_outcome.body_equals.as_ref().unwrap() != response_body {
       actual_outcome.body_equals = Some(String::from(response_body));
