@@ -2,6 +2,7 @@
 mod tests;
 
 use std::collections::HashMap;
+use jzon::JsonValue;
 
 use crate::{task, http_request, Test, Config, ConfigFile, TestOutcome};
 
@@ -16,7 +17,7 @@ pub fn check_test_result(test: &Test, response_status_code: u16, response_conten
   let mut actual_outcome: TestOutcome = TestOutcome::default();
 
   if test.expected_outcome.body_equals.is_some() {
-    if response_content_type == "application/json" && (jzon::parse(response_body).unwrap_or(jzon::JsonValue::new_object()) != jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()).unwrap()) {
+    if response_content_type == "application/json" && !expected_equals_actual_json(jzon::parse(test.expected_outcome.body_equals.as_ref().unwrap()).unwrap_or(JsonValue::new_object()), jzon::parse(response_body).unwrap_or(JsonValue::new_object())) {
       actual_outcome.body_equals = Some(String::from(response_body));
     } else if response_content_type != "application/json" && test.expected_outcome.body_equals.as_ref().unwrap() != response_body {
       actual_outcome.body_equals = Some(String::from(response_body));
@@ -88,4 +89,51 @@ fn run_test_before_tasks<'a>(test: &'a Test, config: &'a Config, config_file: &'
       (x.as_str(), res)
     })
     .collect();
+}
+
+fn expected_equals_actual_json(expected: JsonValue, actual: JsonValue) -> bool {
+  if expected.is_string() && expected.as_str().unwrap_or_default() == "%%%ANY%%%" {
+    return true;
+  }
+
+  if expected.is_string() && expected.as_str().unwrap_or_default() == "%%%ANY_STRING%%%" && actual.is_string() {
+    return true;
+  }
+
+  if !expected.is_array() && !expected.is_object() {
+    return expected == actual;
+  }
+
+  let default_vec: Vec<JsonValue> = Vec::new();
+  let default_json: JsonValue = JsonValue::Null;
+
+  if expected.is_array() {
+    if expected.as_array().unwrap_or(&default_vec).len() != actual.as_array().unwrap_or(&default_vec).len() {
+      return false;
+    }
+
+    for i in 0..expected.as_array().unwrap_or(&default_vec).len() {
+      if !expected_equals_actual_json(expected.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone(), actual.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone()) {
+        return false;
+      }
+    }
+  }
+
+  let default_object: jzon::object::Object = jzon::object::Object::new();
+
+  if expected.is_object() {
+    if expected.as_object().unwrap_or(&default_object).len() != actual.as_object().unwrap_or(&default_object).len() {
+      return false;
+    }
+
+    for (expected_key, expected_value) in expected.as_object().unwrap_or(&default_object).clone().into_iter() {
+      let actual_value = actual.as_object().unwrap_or(&default_object).get(&expected_key).unwrap_or(&default_json).clone();
+
+      if !expected_equals_actual_json(expected_value, actual_value) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
