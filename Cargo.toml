@@ -17,3 +17,4 @@ jzon = "0.12.5"
 ureq = { version = "*", default-features = false }
 linked-hash-map = "0.5.6"
 linked_hash_set = "0.1.4"
+uuid = "0.8.0"

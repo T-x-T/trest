@@ -3,6 +3,7 @@ mod tests;
 
 use std::collections::HashMap;
 use jzon::JsonValue;
+use uuid::Uuid;
 
 use crate::{task, http_request, Test, Config, ConfigFile, TestOutcome};
 
@@ -97,6 +98,10 @@ fn expected_equals_actual_json(expected: JsonValue, actual: JsonValue) -> bool {
   }
 
   if expected.is_string() && expected.as_str().unwrap_or_default() == "%%%ANY_STRING%%%" && actual.is_string() {
+    return true;
+  }
+
+  if expected.is_string() && expected.as_str().unwrap_or_default() == "%%%ANY_UUID%%%" && actual.is_string() && Uuid::parse_str(actual.to_string().as_str()).is_ok() {
     return true;
   }
 
