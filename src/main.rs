@@ -7,6 +7,7 @@
   clippy::wildcard_imports,
   clippy::unnecessary_unwrap,
   clippy::module_name_repetitions,
+  clippy::needless_return,
 )]
 
 use linked_hash_map::LinkedHashMap;

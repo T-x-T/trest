@@ -72,7 +72,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Null;
 		let actual: JsonValue = JsonValue::Null;
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -80,7 +80,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Number(5.into());
 		let actual: JsonValue = JsonValue::Number(5.into());
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -88,7 +88,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Number(0.into());
 		let actual: JsonValue = JsonValue::Number(0.into());
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -96,7 +96,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Number(5.into());
 		let actual: JsonValue = JsonValue::Number(4.into());
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -104,7 +104,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::String("Hello World!".to_string());
 		let actual: JsonValue = JsonValue::String("Hello World!".to_string());
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -112,7 +112,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::String("Hello Universe!".to_string());
 		let actual: JsonValue = JsonValue::String("Hello World!".to_string());
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -120,7 +120,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(Vec::new());
 		let actual: JsonValue = JsonValue::Array(Vec::new());
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -128,7 +128,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 		let actual: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -136,7 +136,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(vec![JsonValue::String("Moin World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 		let actual: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -144,7 +144,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 		let actual: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string())]);
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -152,7 +152,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string())]);
 		let actual: JsonValue = JsonValue::Array(vec![JsonValue::String("Hello World!".to_string()), JsonValue::String("Hello Universe!".to_string())]);
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -160,7 +160,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! {};
 		let actual: JsonValue = object! {};
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -168,7 +168,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -176,7 +176,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { string: "Hello World!", number: 42, boolean: true};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -184,7 +184,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!"};
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -192,7 +192,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { number: 42, string: "Hello World!"};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -200,7 +200,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { number: 42, string: "Hello World!", bool: true};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -208,7 +208,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = object! { number: 42, string: "Hello World!", boolean: false};
 		let actual: JsonValue = object! { number: 42, string: "Hello World!", boolean: true};
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -216,7 +216,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = JsonValue::Array(vec![object! { number: 42, string: "Hello World!", boolean: false}, object! { number: 42, string: "Hello World!", boolean: true}]);
 		let actual: JsonValue = JsonValue::Array(vec![object! { number: 42, string: "Hello World!", boolean: false}, object! { number: 42, string: "Hello World!", boolean: true}]);
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -614,7 +614,7 @@ mod expected_equals_actual_json {
 			]
 		};
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1012,7 +1012,7 @@ mod expected_equals_actual_json {
 			]
 		};
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1020,7 +1020,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = parse(r#"{"datasets":[{"label":"Earning","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 		let actual: JsonValue = parse(r#"{"datasets":[{"label":"Earning","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1028,7 +1028,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = parse(r#"{"datasets":[{"label":"%%%ANY%%%","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 		let actual: JsonValue = parse(r#"{"datasets":[{"label":"Earning","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1036,7 +1036,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = parse(r#"{"datasets":[{"label":"%%%ANY_STRING%%%","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 		let actual: JsonValue = parse(r#"{"datasets":[{"label":"Earning","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 
-		assert!(expected_equals_actual_json(expected, actual));
+		assert!(expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1044,7 +1044,7 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = parse(r#"{"datasets":[{"label":"%%%ANY_STRING%%%","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 		let actual: JsonValue = parse(r#"{"datasets":[{"label":100,"data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 
 	#[test]
@@ -1052,6 +1052,6 @@ mod expected_equals_actual_json {
 		let expected: JsonValue = parse(r#"{"datasets":[{"label":"%%%ANY_STRING%%%","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 		let actual: JsonValue = parse(r#"{"datasets":[{"label":null,"data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.9,"label":"246.90€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Net","data":[{"name":null,"timestamp":"1923-03-01","value":6.0,"label":"3.00€ 3.00$"},{"name":null,"timestamp":"2023-03-01","value":266.0,"label":"246.00€ 20.00$"},{"name":null,"timestamp":"2123-03-01","value":6.0,"label":"3.00€ 3.00$"}]},{"label":"Spending","data":[{"name":null,"timestamp":"2023-03-01","value":-0.9,"label":"-0.90€"}]}]}"#).unwrap();
 
-		assert!(!expected_equals_actual_json(expected, actual));
+		assert!(!expected_equals_actual_json(expected, actual, HashMap::new()));
 	}
 }

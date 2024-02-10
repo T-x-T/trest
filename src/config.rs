@@ -1,4 +1,5 @@
 use std::process;
+use std::collections::HashMap;
 use crate::{Config, ConfigFile, test};
 
 pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
@@ -10,6 +11,8 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
     println!("\n--------------\nrunning test chain \x1b[96m{}\x1b[0m", test_chain.name);
     run_setup(config);
   
+    let mut test_responses: HashMap<String, jzon::JsonValue> = HashMap::new();
+
     let mut test_chain_outcomes: Vec<Option<String>> = test_chain.tests
       .iter()
       .map(|test| {
@@ -18,7 +21,12 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
         let response_status_code = response.status();
         let response_content_type = String::from(response.content_type());
         let response_body = response.into_string().unwrap();
-        let result = test::check_test_result(test, response_status_code, &response_content_type, &response_body);
+
+        if response_content_type == "application/json" {
+          test_responses.insert(test.name.clone(), jzon::parse(response_body.as_str()).unwrap_or(jzon::Null));
+        }
+
+        let result = test::check_test_result(test, response_status_code, &response_content_type, &response_body, test_responses.clone());
 
         return match result {
           test::TestResults::Passed => None,
