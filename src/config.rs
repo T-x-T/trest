@@ -17,7 +17,7 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
       .iter()
       .map(|test| {
         print!("running test \x1b[96m{}\x1b[0m: ", test.name);
-        let response = test::run_test_http_request(test, config, config_file);
+        let response = test::run_test_http_request(test.clone(), config, config_file, test_responses.clone());
         let response_status_code = response.status();
         let response_content_type = String::from(response.content_type());
         let response_body = response.into_string().unwrap();

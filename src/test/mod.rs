@@ -65,8 +65,43 @@ pub fn stringify_test_outcome(actual_outcome: &TestOutcome, expected_outcome: &T
   return output_parts.concat()
 }
 
-pub fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigFile) -> ureq::Response {
-  let before_task_results: HashMap<&str, String> = run_test_before_tasks(test, config, config_file);
+pub fn run_test_http_request(mut test: Test, config: &Config, config_file: &ConfigFile, test_responses: HashMap<String, jzon::JsonValue>) -> ureq::Response {
+  let before_task_results: HashMap<String, String> = run_test_before_tasks(test.clone(), config, config_file);
+
+  if test.endpoint.contains("%%%[[[") {
+    let before: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[0];
+    let key: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[0];
+    let index: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[0];
+    let after: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[1];
+
+    let mut value = test_responses.get(&key.to_string()).unwrap_or(&jzon::Null);
+
+    let empty_vec: Vec<JsonValue> = Vec::new();
+    if !value.is_null() {
+      if value.is_array() {
+        value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
+      }
+      test.endpoint = before.to_string() + &value.get(&index).unwrap_or(&jzon::Null).to_string() + after;
+    }
+  }
+
+  if test.body.is_some() && test.body.clone().unwrap().contains("%%%[[[") {
+    let body = test.body.clone().unwrap();
+    let before: &str = body.split("%%%[[[").collect::<Vec<&str>>()[0];
+    let key: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[0];
+    let index: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[0];
+    let after: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[1];
+
+    let mut value = test_responses.get(&key.to_string()).unwrap_or(&jzon::Null);
+
+    let empty_vec: Vec<JsonValue> = Vec::new();
+    if !value.is_null() {
+      if value.is_array() {
+        value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
+      }
+      test.body = Some(before.to_string() + &value.get(&index).unwrap_or(&jzon::Null).to_string() + after);
+    }
+  }
 
   return http_request::send(
     config,
@@ -78,7 +113,7 @@ pub fn run_test_http_request(test: &Test, config: &Config, config_file: &ConfigF
   );
 }
 
-fn run_test_before_tasks<'a>(test: &'a Test, config: &'a Config, config_file: &'a ConfigFile) -> HashMap<&'a str, String> {
+fn run_test_before_tasks(test: Test, config: &Config, config_file: &ConfigFile) -> HashMap<String, String> {
   if test.before.is_none() {
     return HashMap::new();
   }
@@ -87,7 +122,7 @@ fn run_test_before_tasks<'a>(test: &'a Test, config: &'a Config, config_file: &'
     .iter()
     .map(|x| {
       let res = task::run(config, config_file.tasks.get(x).expect(format!("test {x} not found").as_str()), x);
-      (x.as_str(), res)
+      (x.clone(), res)
     })
     .collect();
 }
@@ -109,9 +144,13 @@ fn expected_equals_actual_json(expected: JsonValue, actual: JsonValue, test_resp
     let start = expected.as_str().unwrap_or_default().replace("%%%", "").replace("[[[", "").replace("]]]", "");
     let key = start.split("...").collect::<Vec<&str>>()[0].to_string();
     let index = start.split("...").collect::<Vec<&str>>()[1].to_string();
-    let value = test_responses.get(&key).unwrap_or(&jzon::Null).get(&index).unwrap_or(&jzon::Null);
+    let mut value = test_responses.get(&key).unwrap_or(&jzon::Null);
+    let empty_vec: Vec<JsonValue> = Vec::new();
+    if value.is_array() {
+      value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
+    }
 
-    if *value == actual {
+    if *value.get(&index).unwrap_or(&jzon::Null) == actual {
       return true;
     }
   }

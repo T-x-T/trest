@@ -3,12 +3,12 @@ use linked_hash_map::LinkedHashMap;
 
 use crate::Config;
 
-pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<&HashMap<&str, String>>) -> ureq::Response {
+pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, cookies: Option<&LinkedHashMap<String, String>>, before_task_results: Option<&HashMap<String, String>>) -> ureq::Response {
   let mut request_url = String::from(&config.api_hostname);
   request_url.push_str(endpoint); 
   
   let cookie_string = if cookies.is_some() {
-    parse_cookies(cookies.unwrap(), before_task_results.as_ref().unwrap())
+    parse_cookies(cookies.unwrap(), before_task_results.unwrap())
   } else {
     String::new()
   };
@@ -47,7 +47,7 @@ pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, c
   }
 }
 
-fn parse_cookies(cookies: &LinkedHashMap<String, String>, before_task_results: &HashMap<&str, String>) -> String {
+fn parse_cookies(cookies: &LinkedHashMap<String, String>, before_task_results: &HashMap<String, String>) -> String {
   return cookies
     .iter()
     .map(|(key, value)| {
