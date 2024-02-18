@@ -68,39 +68,31 @@ pub fn stringify_test_outcome(actual_outcome: &TestOutcome, expected_outcome: &T
 pub fn run_test_http_request(mut test: Test, config: &Config, config_file: &ConfigFile, test_responses: HashMap<String, jzon::JsonValue>) -> ureq::Response {
   let before_task_results: HashMap<String, String> = run_test_before_tasks(test.clone(), config, config_file);
 
-  if test.endpoint.contains("%%%[[[") {
-    let before: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[0];
+  while test.endpoint.contains("%%%[[[") {
     let key: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[0];
     let index: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[0];
-    let after: &str = test.endpoint.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[1];
 
     let mut value = test_responses.get(&key.to_string()).unwrap_or(&jzon::Null);
 
     let empty_vec: Vec<JsonValue> = Vec::new();
-    if !value.is_null() {
-      if value.is_array() {
-        value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
-      }
-      test.endpoint = before.to_string() + &value.get(&index).unwrap_or(&jzon::Null).to_string() + after;
+    if value.is_array() {
+      value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
     }
+    test.endpoint = test.endpoint.replace(format!("%%%[[[{key}]]]...[[[{index}]]]%%%").as_str(), value.get(&index).unwrap_or(&jzon::Null).to_string().as_str());
   }
 
-  if test.body.is_some() && test.body.clone().unwrap().contains("%%%[[[") {
+  while test.body.is_some() && test.body.clone().unwrap().contains("%%%[[[") {
     let body = test.body.clone().unwrap();
-    let before: &str = body.split("%%%[[[").collect::<Vec<&str>>()[0];
     let key: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[0];
     let index: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[0];
-    let after: &str = body.split("%%%[[[").collect::<Vec<&str>>()[1].split("]]]...[[[").collect::<Vec<&str>>()[1].split("]]]%%%").collect::<Vec<&str>>()[1];
 
     let mut value = test_responses.get(&key.to_string()).unwrap_or(&jzon::Null);
 
     let empty_vec: Vec<JsonValue> = Vec::new();
-    if !value.is_null() {
-      if value.is_array() {
-        value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
-      }
-      test.body = Some(before.to_string() + &value.get(&index).unwrap_or(&jzon::Null).to_string() + after);
+    if value.is_array() {
+      value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
     }
+    test.body = Some(test.body.unwrap().replace(format!("%%%[[[{key}]]]...[[[{index}]]]%%%").as_str(), value.get(&index).unwrap_or(&jzon::Null).to_string().as_str()));
   }
 
   return http_request::send(
