@@ -41,10 +41,16 @@ pub fn send(config: &Config, method: &str, endpoint: &str, body: Option<&str>, c
     _ => panic!("tried to send http request with unrecognized method {method}"),
   };
 
-  return match res {
-    Ok(x) => x,
-    Err(e) => e.into_response().unwrap_or(ureq::Response::new(999, "", "").unwrap())
-  }
+  match res {
+    Ok(x) => return x,
+    Err(e) => {
+      let error_string = format!("{e:?}");
+      return e.into_response().unwrap_or_else(|| {
+        println!("couldn't parse response\n{error_string}");
+        ureq::Response::new(999, "", "").unwrap()
+      });
+    }
+  };
 }
 
 fn parse_cookies(cookies: &LinkedHashMap<String, String>, before_task_results: &HashMap<String, String>) -> String {
