@@ -159,8 +159,30 @@ fn expected_equals_actual_json(expected: JsonValue, actual: JsonValue, test_resp
       return false;
     }
 
-    for i in 0..expected.as_array().unwrap_or(&default_vec).len() {
-      if !expected_equals_actual_json(expected.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone(), actual.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone(), test_responses.clone()) {
+    let mut expected_clone = expected.clone();
+    let mut mut_default_vec: Vec<JsonValue> = Vec::new();
+    for item in expected_clone.as_array_mut().unwrap_or(&mut mut_default_vec).into_iter() {
+      if item.is_string() && item.as_str().unwrap_or_default().starts_with("%%%[[[") {
+        let start = item.as_str().unwrap_or_default().replace("%%%", "").replace("[[[", "").replace("]]]", "");
+        let key = start.split("...").collect::<Vec<&str>>()[0].to_string();
+        let index = start.split("...").collect::<Vec<&str>>()[1].to_string();
+        let mut value = test_responses.get(&key).unwrap_or(&jzon::Null);
+        let empty_vec: Vec<JsonValue> = Vec::new();
+        if value.is_array() {
+          value = value.as_array().unwrap_or(&empty_vec).first().unwrap_or(&JsonValue::Null);
+        }
+        
+        *item = value.get(&index).unwrap_or(&jzon::Null).clone();
+      }
+    }
+    expected_clone.as_array_mut().unwrap().sort_by(|a, b| a.as_str().unwrap_or_default().partial_cmp(b.as_str().unwrap_or_default()).unwrap());
+
+
+    let mut actual_clone = actual.clone();
+    actual_clone.as_array_mut().unwrap().sort_by(|a, b| a.as_str().unwrap_or_default().partial_cmp(b.as_str().unwrap_or_default()).unwrap());
+
+    for i in 0..expected_clone.as_array().unwrap_or(&default_vec).len() {
+      if !expected_equals_actual_json(expected_clone.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone(), actual_clone.as_array().unwrap_or(&default_vec).get(i).unwrap_or(&default_json).clone(), test_responses.clone()) {
         return false;
       }
     }
