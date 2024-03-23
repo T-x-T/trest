@@ -10,7 +10,7 @@ use crate::{task, http_request, Test, Config, ConfigFile, TestOutcome};
 #[derive(PartialEq)]
 pub enum TestResults {
   Passed, 
-  Failed(TestOutcome)
+  Failed(TestOutcome),
 }
 
 #[allow(clippy::if_same_then_else)]

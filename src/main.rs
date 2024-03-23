@@ -94,6 +94,7 @@ fn parse_config_file(input: &jzon::JsonValue) -> ConfigFile {
           status_code_equals: test["expected_outcome"]["status_code_equals"].as_usize(),
           body_equals: if test["expected_outcome"]["body_equals"].is_null() { None } else { Some(test["expected_outcome"]["body_equals"].to_string()) },
         },
+        skip: test["skip"].as_bool().unwrap_or(false),
       }).collect(),
     }).collect(),
   };
@@ -160,6 +161,7 @@ pub struct Test {
   pub cookies: Option<LinkedHashMap<String, String>>,
   pub before: Option<LinkedHashSet<String>>,
   pub expected_outcome: TestOutcome,
+  pub skip: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Eq, Default)]
@@ -209,6 +211,7 @@ mod unit_test {
               status_code_equals: Some(200),
               body_equals: Some(r#"[{"id":0,"name":"Euro","minor_in_mayor":100,"symbol":"€"},{"id":1,"name":"USD","minor_in_mayor":100,"symbol":"$"}]"#.to_string()),
             },
+            skip: false,
           }].into_iter().collect(),
         },
         TestChain {
@@ -226,6 +229,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
             Test {
               name: "post of new recipient returns 200".to_string(),
@@ -238,6 +242,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: None,
               },
+              skip: false,
             },
             Test {
               name: "new recipient created correctly".to_string(),
@@ -250,6 +255,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"test","user_id":0,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
             Test {
               name: "updating name of recipient returns 200".to_string(),
@@ -262,6 +268,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: None,
               },
+              skip: false,
             },
             Test {
               name: "updated recipient name saved correctly".to_string(),
@@ -274,6 +281,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"edited test","user_id":0,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
           ].into_iter().collect(),
         },
@@ -295,6 +303,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
             Test {
               name: "post of new recipient returns 200".to_string(),
@@ -307,6 +316,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: None,
               },
+              skip: false,
             },
             Test {
               name: "new recipient created correctly".to_string(),
@@ -319,6 +329,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"test","user_id":0,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
             Test {
               name: "updating name of recipient returns 200".to_string(),
@@ -331,6 +342,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: None,
               },
+              skip: false,
             },
             Test {
               name: "updated recipient name saved correctly".to_string(),
@@ -343,6 +355,7 @@ mod unit_test {
                 status_code_equals: Some(200),
                 body_equals: Some(r#"[{"id":0,"name":"Default","user_id":null,"tag_ids":[]},{"id":1,"name":"edited test","user_id":0,"tag_ids":[]}]"#.to_string()),
               },
+              skip: false,
             },
           ].into_iter().collect(),
         },

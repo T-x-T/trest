@@ -16,6 +16,10 @@ pub fn run(config: &Config, config_file: &ConfigFile) -> bool {
     let mut test_chain_outcomes: Vec<Option<String>> = test_chain.tests
       .iter()
       .map(|test| {
+        if test.skip {
+          println!("skipping test \x1b[96m{}\x1b[0m", test.name);
+          return None;
+        }
         print!("running test \x1b[96m{}\x1b[0m: ", test.name);
         let response = test::run_test_http_request(test.clone(), config, config_file, test_responses.clone());
         let response_status_code = response.status();
