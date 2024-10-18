@@ -8,6 +8,8 @@ $ wget bin.tre.st/latest && chmod +x latest && ./latest config.json
 ```
 You just need to change the `config.json` to the path of your coniguration file.
 
+## Config-file
+
 The configuration file is a JSON file conisting of three keys at its root: `configs`, `tasks` and `tests`.  
 
 The `configs` key contains an array of objects. Each object represents a configuration. The idea behind this is that you can easily run your tests with different configurations. This might be useful if your application supports multiple databases and you want to make sure that your API behaves the same with each.  
@@ -81,3 +83,16 @@ Each object can look like this:
 ```
 
 A full example configuration can be found [here](https://github.com/T-x-T/trest/blob/main/test/sample.json).
+
+
+## CLI Arguments
+
+You can configure which tests are run through cli arguments:
+
+- `--config_to_run=test`: only run the config named test
+
+Arguments are specified after the config file path. Example:
+
+```
+$ wget bin.tre.st/latest && chmod +x latest && ./latest config.json --config_to_run=test
+```

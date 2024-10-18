@@ -21,8 +21,15 @@ mod config;
 
 fn main() {
   println!("Starting trest");
-  let config_file = get_config_file();
+
+  let args = get_args();
+  let mut config_file = get_config_file();
   println!("Config file read");
+  
+  if args.config_to_run.is_some() {
+    config_file.configs = config_file.configs.iter().filter(|x| x.name == args.config_to_run.clone().unwrap()).cloned().collect();
+  }
+
   println!("There are {} configs to run", config_file.configs.len());
 
   let mut tests_failed = false;
@@ -38,6 +45,17 @@ fn main() {
   } else {
     process::exit(0);
   }
+}
+
+fn get_args() -> CliArgs {
+  let args: Vec<String> = std::env::args().collect();
+  println!("{:?}", args);
+  return CliArgs {
+    config_to_run: match Into::<Option<String>>::into(args.iter().cloned().filter(|x| x.starts_with("--config_to_run=")).collect::<Vec<String>>().first().cloned().unwrap_or_default()) {
+      Some(x) => if x.is_empty() {None} else {Some(x.replace("--config_to_run=", ""))}
+      None => None,
+    },
+  };
 }
 
 fn get_config_file() -> ConfigFile {
@@ -98,6 +116,11 @@ fn parse_config_file(input: &jzon::JsonValue) -> ConfigFile {
       }).collect(),
     }).collect(),
   };
+}
+
+#[derive(Clone, Debug)]
+pub struct CliArgs {
+  pub config_to_run: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
