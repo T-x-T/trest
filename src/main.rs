@@ -55,7 +55,7 @@ fn main() {
 
 fn get_args() -> CliArgs {
   let args: Vec<String> = std::env::args().collect();
-  println!("{:?}", args);
+
   return CliArgs {
     config_to_run: match Into::<Option<String>>::into(args.iter().cloned().filter(|x| x.starts_with("--config_to_run=")).collect::<Vec<String>>().first().cloned().unwrap_or_default()) {
       Some(x) => if x.is_empty() {None} else {Some(x.replace("--config_to_run=", ""))}
