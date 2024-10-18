@@ -90,9 +90,10 @@ A full example configuration can be found [here](https://github.com/T-x-T/trest/
 You can configure which tests are run through cli arguments:
 
 - `--config_to_run=test`: only run the config named test
+- `--test_to_run=test`: only run the test chain named test
 
 Arguments are specified after the config file path. Example:
 
 ```
-$ wget bin.tre.st/latest && chmod +x latest && ./latest config.json --config_to_run=test
+$ wget bin.tre.st/latest && chmod +x latest && ./latest config.json --config_to_run=test --test_to_run=test
 ```

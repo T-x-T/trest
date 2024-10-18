@@ -28,6 +28,12 @@ fn main() {
   
   if args.config_to_run.is_some() {
     config_file.configs = config_file.configs.iter().filter(|x| x.name == args.config_to_run.clone().unwrap()).cloned().collect();
+    println!("Only running config {}", args.config_to_run.unwrap());
+  }
+
+  if args.test_to_run.is_some() {
+    config_file.tests = config_file.tests.iter().filter(|x| x.name == args.test_to_run.clone().unwrap()).cloned().collect();
+    println!("Only running test chain {}", args.test_to_run.unwrap());
   }
 
   println!("There are {} configs to run", config_file.configs.len());
@@ -53,6 +59,10 @@ fn get_args() -> CliArgs {
   return CliArgs {
     config_to_run: match Into::<Option<String>>::into(args.iter().cloned().filter(|x| x.starts_with("--config_to_run=")).collect::<Vec<String>>().first().cloned().unwrap_or_default()) {
       Some(x) => if x.is_empty() {None} else {Some(x.replace("--config_to_run=", ""))}
+      None => None,
+    },
+    test_to_run: match Into::<Option<String>>::into(args.iter().cloned().filter(|x| x.starts_with("--test_to_run=")).collect::<Vec<String>>().first().cloned().unwrap_or_default()) {
+      Some(x) => if x.is_empty() {None} else {Some(x.replace("--test_to_run=", ""))}
       None => None,
     },
   };
@@ -121,6 +131,7 @@ fn parse_config_file(input: &jzon::JsonValue) -> ConfigFile {
 #[derive(Clone, Debug)]
 pub struct CliArgs {
   pub config_to_run: Option<String>,
+  pub test_to_run: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
